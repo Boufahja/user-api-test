@@ -1,0 +1,266 @@
+openapi: 3.0.3
+info:
+  title: User Management API
+  description: >
+    A simple REST API to manage users (CRUD operations) with Basic Authentication.  
+    All requests and responses use JSON format.
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:8000
+    description: Local server
+
+tags:
+  - name: Users
+    description: User CRUD operations
+
+paths:
+  /users:
+    post:
+      tags: [Users]
+      summary: Create a new user
+      description: Create a new user with required fields.
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "401":
+          $ref: '#/components/responses/UnauthorizedError'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+    get:
+      tags: [Users]
+      summary: List all users
+      security:
+        - basicAuth: []
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        "401":
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /users/{user_id}:
+    get:
+      tags: [Users]
+      summary: Get a user by ID
+      security:
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "401":
+          $ref: '#/components/responses/UnauthorizedError'
+        "404":
+          $ref: '#/components/responses/NotFoundError'
+
+    put:
+      tags: [Users]
+      summary: Replace a user completely
+      security:
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        "200":
+          description: User replaced successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "401":
+          $ref: '#/components/responses/UnauthorizedError'
+        "404":
+          $ref: '#/components/responses/NotFoundError'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+    patch:
+      tags: [Users]
+      summary: Partially update a user
+      security:
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        "200":
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "401":
+          $ref: '#/components/responses/UnauthorizedError'
+        "404":
+          $ref: '#/components/responses/NotFoundError'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags: [Users]
+      summary: Delete a user
+      security:
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        "204":
+          description: User deleted successfully
+        "401":
+          $ref: '#/components/responses/UnauthorizedError'
+        "404":
+          $ref: '#/components/responses/NotFoundError'
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+
+  parameters:
+    UserId:
+      name: user_id
+      in: path
+      required: true
+      description: Numeric ID of the user
+      schema:
+        type: integer
+        example: 1
+
+  responses:
+    UnauthorizedError:
+      description: Unauthorized - Invalid username or password
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: Invalid username or password
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: User not found
+
+    ValidationError:
+      description: Validation error in request body
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    loc:
+                      type: array
+                      items:
+                        type: string
+                    msg:
+                      type: string
+                    type:
+                      type: string
+            example:
+              detail:
+                - loc: ["body", "email"]
+                  msg: "value is not a valid email address"
+                  type: "value_error.email"
+
+  schemas:
+    UserBase:
+      type: object
+      properties:
+        username:
+          type: string
+          example: johndoe
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        full_name:
+          type: string
+          nullable: true
+          example: John Doe
+
+    UserCreate:
+      allOf:
+        - $ref: '#/components/schemas/UserBase'
+        - type: object
+          required:
+            - username
+            - email
+            - password
+          properties:
+            password:
+              type: string
+              minLength: 6
+              example: secret123
+
+    UserUpdate:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: new.email@example.com
+        full_name:
+          type: string
+          example: John Updated
+        password:
+          type: string
+          minLength: 6
+          example: newpass123
+
+    User:
+      allOf:
+        - $ref: '#/components/schemas/UserBase'
+        - type: object
+          properties:
+            id:
+              type: integer
+              example: 1
