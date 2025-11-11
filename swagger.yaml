@@ -4,7 +4,7 @@ info:
   description: >
     A simple REST API to manage users (CRUD operations) with Basic Authentication.  
     All requests and responses use JSON format.
-  version: "1.0.0"
+  version: "1.1.0"
 
 servers:
   - url: http://localhost:8000
@@ -35,10 +35,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        "400":
+          $ref: '#/components/responses/BadRequestError'
         "401":
           $ref: '#/components/responses/UnauthorizedError'
         "422":
           $ref: '#/components/responses/ValidationError'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
 
     get:
       tags: [Users]
@@ -56,6 +60,8 @@ paths:
                   $ref: '#/components/schemas/User'
         "401":
           $ref: '#/components/responses/UnauthorizedError'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
 
   /users/{user_id}:
     get:
@@ -76,6 +82,8 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         "404":
           $ref: '#/components/responses/NotFoundError'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
 
     put:
       tags: [Users]
@@ -97,12 +105,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        "400":
+          $ref: '#/components/responses/BadRequestError'
         "401":
           $ref: '#/components/responses/UnauthorizedError'
         "404":
           $ref: '#/components/responses/NotFoundError'
         "422":
           $ref: '#/components/responses/ValidationError'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
 
     patch:
       tags: [Users]
@@ -124,12 +136,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        "400":
+          $ref: '#/components/responses/BadRequestError'
         "401":
           $ref: '#/components/responses/UnauthorizedError'
         "404":
           $ref: '#/components/responses/NotFoundError'
         "422":
           $ref: '#/components/responses/ValidationError'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
 
     delete:
       tags: [Users]
@@ -145,6 +161,8 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         "404":
           $ref: '#/components/responses/NotFoundError'
+        "500":
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   securitySchemes:
@@ -163,6 +181,17 @@ components:
         example: 1
 
   responses:
+    BadRequestError:
+      description: Bad request - invalid input or business rule violation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: "Email must end with '.com'"
+
     UnauthorizedError:
       description: Unauthorized - Invalid username or password
       content:
@@ -210,6 +239,17 @@ components:
                 - loc: ["body", "email"]
                   msg: "value is not a valid email address"
                   type: "value_error.email"
+
+    InternalServerError:
+      description: Internal server error - unexpected failure
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: Internal Server Error
 
   schemas:
     UserBase:
